@@ -5,7 +5,7 @@ export function Hero() {
         Garage Lobster
       </p>
       <h1 className="text-4xl lg:text-6xl font-bold tracking-tight max-w-3xl">
-        Every car you love, fully documented.
+        Every car in your garage, fully documented.
       </h1>
       <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
         Log maintenance, track your mods, and plan the next parts haul, all in

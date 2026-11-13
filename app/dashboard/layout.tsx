@@ -1,5 +1,5 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { Suspense } from "react";
+import { TopBar, TopBarFrame } from "@/components/dashboard/top-bar";
 
 export default function DashboardLayout({
   children,
@@ -7,14 +7,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <Header />
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          {children}
-        </div>
-        <Footer />
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col bg-muted/40">
+      <Suspense fallback={<TopBarFrame />}>
+        <TopBar />
+      </Suspense>
+      <main className="flex-1">{children}</main>
+    </div>
   );
 }
