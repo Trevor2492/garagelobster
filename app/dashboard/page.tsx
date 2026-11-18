@@ -23,7 +23,7 @@ async function Dashboard({ searchParams }: { searchParams: SearchParams }) {
 function DashboardSkeleton() {
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-10 lg:py-8">
-      <div className="h-14 animate-pulse rounded-2xl bg-muted lg:h-80 lg:rounded-[2rem]" />
+      <div className="hidden h-80 animate-pulse rounded-[2rem] bg-muted lg:block" />
       <div className="flex flex-col gap-10">
         <div className="h-72 animate-pulse rounded-2xl bg-muted" />
         <div className="h-80 animate-pulse rounded-2xl bg-muted" />

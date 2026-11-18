@@ -13,7 +13,7 @@ export function SideNav({
   return (
     <nav
       aria-label="Vehicle sections"
-      className="flex gap-1 overflow-x-auto rounded-2xl border bg-card p-2 shadow-sm lg:sticky lg:top-6 lg:flex-col lg:gap-1.5 lg:overflow-visible lg:rounded-[2rem] lg:p-3"
+      className="sticky top-6 flex flex-col gap-1.5 rounded-[2rem] border bg-card p-3 shadow-sm"
     >
       {SECTIONS.map(({ id, label, icon: Icon }) => {
         const isActive = id === active;
@@ -24,7 +24,7 @@ export function SideNav({
             onClick={() => onSelect(id)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group flex shrink-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isActive
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",

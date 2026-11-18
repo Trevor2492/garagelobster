@@ -12,7 +12,7 @@ const CarScene = dynamic(() => import("./car-scene").then((m) => m.CarScene), {
 
 export function VehicleHero({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <section className="grid items-center gap-6 md:grid-cols-2" aria-label="Vehicle overview">
+    <section className="grid grid-cols-[minmax(0,1fr)] items-center gap-6 md:grid-cols-2" aria-label="Vehicle overview">
       <div>
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
           {vehicle.make} {vehicle.model}
@@ -35,7 +35,7 @@ export function VehicleHero({ vehicle }: { vehicle: Vehicle }) {
         </dl>
       </div>
 
-      <div className="relative h-56 sm:h-72 lg:h-80">
+      <div className="relative h-56 min-w-0 sm:h-72 lg:h-80">
         <div
           aria-hidden
           className="absolute inset-x-6 bottom-4 top-6 rounded-full bg-[radial-gradient(closest-side,hsl(var(--muted))_0%,transparent_100%)]"

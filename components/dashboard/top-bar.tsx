@@ -4,12 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { getGarage } from "@/lib/garage/queries";
 import type { GarageVehicle } from "@/lib/garage/types";
 import { AccountMenu } from "./account-menu";
+import { MobileNav } from "./mobile-nav";
 import { VehicleSwitcher, VehicleSwitcherSkeleton } from "./vehicle-switcher";
 
 export function TopBarFrame({ email, vehicles }: { email?: string; vehicles?: GarageVehicle[] }) {
   return (
     <header className="border-b bg-card/80 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
+        {/* Section menu only makes sense once there's a vehicle to show. */}
+        {vehicles && vehicles.length > 0 && <MobileNav />}
         <Link
           href="/dashboard"
           aria-label="Garage Lobster home"

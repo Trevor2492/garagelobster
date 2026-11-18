@@ -66,7 +66,7 @@ function buildCar(profile: Profile, bodyColor: string, roofColor: string) {
 
   const paint = flat(bodyColor, { roughness: 0.35, metalness: 0.25 });
   const roofPaint = flat(roofColor, { roughness: 0.35 });
-  const glass = flat("#1f2a33", { roughness: 0.15, metalness: 0.6 });
+  const glass = flat("#b9cded", { roughness: 0.15, metalness: 0.6 });
   const trim = flat("#1b1b1b", { roughness: 0.8 });
   const rubber = flat("#222222", { roughness: 0.95 });
   const rim = flat("#c9ccd1", { roughness: 0.3, metalness: 0.8 });
@@ -208,9 +208,14 @@ function disposeTree(root: THREE.Object3D) {
   });
 }
 
+/** Breathing room around the car's bounding sphere (1 = touching the edges). */
+const FRAME_MARGIN = 1.04;
+
 export function CarScene({ bodyColor, roofColor, bodyType }: CarSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
+  // Re-frames the camera around a car's bounding sphere; set up by the scene effect.
+  const frameRef = useRef<((bounds: THREE.Sphere) => void) | null>(null);
   const [unsupported, setUnsupported] = useState(false);
 
   // Renderer, camera, lights and controls: created once per mount.
@@ -229,7 +234,10 @@ export function CarScene({ bodyColor, roofColor, bodyType }: CarSceneProps) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.domElement.style.display = "block";
+    // CSS owns the displayed size so the canvas always tracks its container;
+    // three.js only sets the drawing-buffer resolution (setSize(..., false)).
+    // A fixed pixel width here would prop the layout open after a resize.
+    Object.assign(renderer.domElement.style, { display: "block", width: "100%", height: "100%" });
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -268,14 +276,32 @@ export function CarScene({ bodyColor, roofColor, bodyType }: CarSceneProps) {
     controls.autoRotate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     controls.autoRotateSpeed = 0.8;
 
+    // Fit the car's bounding sphere inside the view. A sphere has the same
+    // silhouette from every direction, so the whole car stays in frame however
+    // it's rotated (even looking straight down) and for every body type.
+    let bounds: THREE.Sphere | null = null;
+    const frame = () => {
+      if (!bounds) return;
+      const vFov = THREE.MathUtils.degToRad(camera.fov);
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+      const distance = (bounds.radius * FRAME_MARGIN) / Math.sin(Math.min(vFov, hFov) / 2);
+      const direction = camera.position.clone().sub(controls.target).normalize();
+      controls.target.copy(bounds.center);
+      camera.position.copy(bounds.center).addScaledVector(direction, distance);
+      controls.update();
+    };
+    frameRef.current = (next) => {
+      bounds = next;
+      frame();
+    };
+
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = mount;
       if (!w || !h) return;
-      renderer.setSize(w, h);
+      renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      // Pull back on narrow containers so the whole car stays in frame.
-      camera.zoom = Math.min(1, w / h / 1.2);
       camera.updateProjectionMatrix();
+      frame();
     };
     const observer = new ResizeObserver(resize);
     observer.observe(mount);
@@ -292,6 +318,7 @@ export function CarScene({ bodyColor, roofColor, bodyType }: CarSceneProps) {
       controls.dispose();
       disposeTree(scene);
       sceneRef.current = null;
+      frameRef.current = null;
       renderer.dispose();
       mount.removeChild(renderer.domElement);
     };
@@ -304,6 +331,8 @@ export function CarScene({ bodyColor, roofColor, bodyType }: CarSceneProps) {
     if (!scene) return;
     const car = buildCar(PROFILES[bodyType], bodyColor, roofColor ?? bodyColor);
     scene.add(car);
+    // Colors don't change the car's size, but body style does: re-frame.
+    frameRef.current?.(new THREE.Box3().setFromObject(car).getBoundingSphere(new THREE.Sphere()));
     return () => {
       scene.remove(car);
       disposeTree(car);
