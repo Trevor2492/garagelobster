@@ -1,5 +1,4 @@
-// Domain types for a user's garage. These mirror the shape we'll eventually
-// store in Supabase, so the mock data can be swapped for real queries later.
+// Domain types for a user's garage, mapped from the Supabase rows in queries.ts.
 
 /** ISO calendar date, e.g. "2026-06-03". */
 export type ISODate = string;
@@ -81,17 +80,17 @@ export interface TransmissionInfo {
 }
 
 export interface TireInfo {
-  size: string;
-  brand: string;
-  model: string;
-  installed: ISODate;
-  installedMileage: number;
-  pressureFrontPsi: number;
-  pressureRearPsi: number;
-  treadDepth32nds: { fl: number; fr: number; rl: number; rr: number };
-  lastRotation: ISODate;
-  rotationIntervalMiles: number;
-  lugNutTorque: string;
+  size?: string;
+  brand?: string;
+  model?: string;
+  installed?: ISODate;
+  installedMileage?: number;
+  pressureFrontPsi?: number;
+  pressureRearPsi?: number;
+  treadDepth32nds: { fl?: number; fr?: number; rl?: number; rr?: number };
+  lastRotation?: ISODate;
+  rotationIntervalMiles?: number;
+  lugNutTorque?: string;
 }
 
 export interface ServiceRecord {
@@ -132,30 +131,30 @@ export interface Maintenance {
 
 export interface Finances {
   loan?: {
-    lender: string;
-    originalAmount: number;
-    balance: number;
-    monthlyPayment: number;
-    aprPercent: number;
-    nextPaymentDue: ISODate;
-    payoffDate: ISODate;
+    lender?: string;
+    originalAmount?: number;
+    balance?: number;
+    monthlyPayment?: number;
+    aprPercent?: number;
+    nextPaymentDue?: ISODate;
+    payoffDate?: ISODate;
   };
   insurance?: {
-    provider: string;
-    policyNumber: string;
-    premium: number;
-    premiumPeriod: "month" | "6 months" | "year";
-    coverage: string;
-    expires: ISODate;
+    provider?: string;
+    policyNumber?: string;
+    premium?: number;
+    premiumPeriod?: "month" | "6 months" | "year";
+    coverage?: string;
+    expires?: ISODate;
   };
-  registration?: { state: string; expires: ISODate; fee: number };
+  registration?: { state?: string; expires?: ISODate; fee?: number };
 }
 
 export interface Driver {
   id: string;
   name: string;
   role: "primary" | "secondary";
-  licenseExpires: ISODate;
+  licenseExpires?: ISODate;
   phone?: string;
 }
 

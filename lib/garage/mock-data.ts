@@ -8,7 +8,7 @@ export const mockVehicle: Vehicle = {
   make: "Mini",
   model: "Cooper S",
   trim: "Hardtop 2 Door",
-  vin: "123X92",
+  vin: "WMWXP7C50F2A12345",
   mileage: 53000,
   licensePlate: "ABC123",
   color: { name: "Chili Red / White roof", body: "#b8252b", roof: "#f4f4f2" },
