@@ -129,7 +129,7 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
       <span className={cn("group/edit inline-flex max-w-full items-baseline gap-1", className)}>
         <span
           onClick={start}
-          className="-mx-1 min-w-0 cursor-text rounded px-1 transition-colors [@media(hover:hover)]:hover:bg-muted"
+          className="-mx-1 min-w-0 cursor-pointer rounded px-1 transition-colors [@media(hover:hover)]:hover:bg-muted"
         >
           {isEmpty && !children ? <span className="font-normal text-muted-foreground">—</span> : (children ?? value)}
         </span>
