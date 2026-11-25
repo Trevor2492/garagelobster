@@ -1,38 +1,19 @@
 "use client";
 
-import { useId, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { addVehicle, type VehicleField } from "@/lib/garage/actions";
 import type { BodyType } from "@/lib/garage/types";
-import { cn } from "@/lib/utils";
+import { BodyStylePicker, PaintPicker, PAINTS, TextField } from "./vehicle-form";
 
 const CarScene = dynamic(() => import("./car-scene").then((m) => m.CarScene), {
   ssr: false,
   loading: () => <div className="h-full w-full animate-pulse bg-muted/60" />,
 });
-
-const BODY_STYLES: { value: BodyType; label: string }[] = [
-  { value: "hatchback", label: "Hatchback" },
-  { value: "sedan", label: "Sedan" },
-  { value: "suv", label: "SUV" },
-];
-
-const PAINTS = [
-  { name: "White", hex: "#f4f4f2" },
-  { name: "Silver", hex: "#c7cad0" },
-  { name: "Gray", hex: "#5b5f66" },
-  { name: "Black", hex: "#1b1b1d" },
-  { name: "Red", hex: "#b8252b" },
-  { name: "Blue", hex: "#1d3f8f" },
-  { name: "Green", hex: "#3f4a3c" },
-  { name: "Yellow", hex: "#e3b324" },
-];
 
 const MAX_YEAR = new Date().getFullYear() + 1;
 
@@ -135,71 +116,8 @@ function AddVehicleForm({ onDone }: { onDone: () => void }) {
             />
           </div>
 
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">Body style</legend>
-            <div className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/50 p-1">
-              {BODY_STYLES.map((b) => (
-                <label
-                  key={b.value}
-                  className={cn(
-                    "cursor-pointer rounded-lg px-3 py-1.5 text-center text-sm font-medium text-muted-foreground transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                    bodyType === b.value ? "bg-card text-foreground shadow-sm" : "hover:text-foreground",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="body_type"
-                    value={b.value}
-                    checked={bodyType === b.value}
-                    onChange={() => setBodyType(b.value)}
-                    className="sr-only"
-                  />
-                  {b.label}
-                </label>
-              ))}
-            </div>
-            <FieldError error={errors.body_type} />
-          </fieldset>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">Paint</legend>
-            <div className="flex flex-wrap items-center gap-2">
-              {PAINTS.map((p) => (
-                <label key={p.hex} title={p.name} className="cursor-pointer">
-                  <input
-                    type="radio"
-                    name="paint_preset"
-                    value={p.hex}
-                    checked={color === p.hex}
-                    onChange={() => setColor(p.hex)}
-                    className="peer sr-only"
-                  />
-                  <span
-                    aria-hidden
-                    className="block h-8 w-8 rounded-full ring-1 ring-inset ring-black/15 ring-offset-2 ring-offset-card transition-shadow peer-checked:ring-2 peer-checked:ring-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring"
-                    style={{ background: p.hex }}
-                  />
-                  <span className="sr-only">{p.name}</span>
-                </label>
-              ))}
-              <label
-                className={cn(
-                  "flex h-8 cursor-pointer items-center gap-2 rounded-full border px-2 text-xs text-muted-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                  !PAINTS.some((p) => p.hex === color) && "border-foreground text-foreground",
-                )}
-              >
-                <input
-                  type="color"
-                  name="color_body"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-5 w-5 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0 [&::-moz-color-swatch]:rounded-full [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
-                />
-                Custom
-              </label>
-            </div>
-            <FieldError error={errors.color_body} />
-          </fieldset>
+          <BodyStylePicker name="body_type" value={bodyType} onChange={setBodyType} error={errors.body_type} />
+          <PaintPicker name="color_body" value={color} onChange={(hex) => setColor(hex)} error={errors.color_body} />
 
           {formError && (
             <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
@@ -219,47 +137,5 @@ function AddVehicleForm({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
     </form>
-  );
-}
-
-function TextField({
-  name,
-  label,
-  error,
-  optional,
-  className,
-  ...props
-}: {
-  name: VehicleField;
-  label: string;
-  error?: string;
-  optional?: boolean;
-} & Omit<React.ComponentProps<"input">, "name">) {
-  const id = useId();
-  return (
-    <div className="grid content-start gap-1.5">
-      <Label htmlFor={id}>
-        {label}
-        {optional && <span className="ml-1 font-normal text-muted-foreground">(optional)</span>}
-      </Label>
-      <Input
-        id={id}
-        name={name}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className={cn("h-10", error && "border-red-500 focus-visible:ring-red-500", className)}
-        {...props}
-      />
-      <FieldError id={`${id}-error`} error={error} />
-    </div>
-  );
-}
-
-function FieldError({ id, error }: { id?: string; error?: string }) {
-  if (!error) return null;
-  return (
-    <p id={id} className="mt-1 text-xs text-red-600 dark:text-red-400">
-      {error}
-    </p>
   );
 }
