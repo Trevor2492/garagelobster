@@ -3,7 +3,8 @@
 // and the server action (authoritative validation + the only source of table
 // and column names, so the client never chooses where a write goes).
 
-export const TORQUE_UNITS = ["Nm", "lb-ft", "in-lb"] as const;
+// The first unit is the default for new values.
+export const TORQUE_UNITS = ["lb-ft", "Nm", "in-lb"] as const;
 export const CAPACITY_UNITS = ["qt", "L", "gal", "oz"] as const;
 
 const MAX_YEAR = new Date().getFullYear() + 1; // next model year is already on sale

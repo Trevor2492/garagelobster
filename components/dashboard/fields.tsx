@@ -23,7 +23,7 @@ export function Field({
   return (
     <div className="grid grid-cols-[minmax(8rem,auto)_1fr] items-baseline gap-3">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className={cn("font-medium text-foreground", mono && "font-mono text-[0.8125rem]")}>
+      <dd className={cn("min-w-0 font-medium text-foreground", mono && "font-mono text-[0.8125rem]")}>
         {children}
       </dd>
     </div>

@@ -57,10 +57,10 @@ export function InfoSection({ vehicle }: { vehicle: Vehicle }) {
           <dl className="grid gap-3 text-sm">
             {s.torqueSpecs.map((t, i) => (
               <div key={i} className="grid grid-cols-[minmax(8rem,auto)_1fr] items-baseline gap-3">
-                <dt className="text-muted-foreground">
+                <dt className="min-w-0 text-muted-foreground">
                   <Editable field="torque.item" value={t.item} index={i} />
                 </dt>
-                <dd className="font-mono text-[0.8125rem] font-medium">
+                <dd className="min-w-0 font-mono text-[0.8125rem] font-medium">
                   <Editable field="torque.spec" value={t.spec} index={i} />
                 </dd>
               </div>

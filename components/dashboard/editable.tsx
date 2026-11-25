@@ -38,7 +38,7 @@ interface EditableProps {
 /**
  * A value that can be edited in place. Hover (on devices that have hover)
  * reveals a pencil; clicking or tapping the value opens an inline editor.
- * Enter or ✓ saves, Escape or ✕ cancels.
+ * Enter or ✓ saves; Escape, ✕ or clicking away cancels.
  */
 export function Editable({ field, value, children, rowId, index, className }: EditableProps) {
   const vehicleId = useVehicleId();
@@ -50,6 +50,8 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
   const pencilRef = useRef<HTMLButtonElement>(null);
+  const editorRef = useRef<HTMLSpanElement>(null);
+  const savingRef = useRef(false);
   const errorId = useId();
 
   const isEmpty = value === null || value === undefined || value === "";
@@ -68,11 +70,24 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
     setEditing(true);
   };
 
-  const stop = () => {
+  const stop = (restoreFocus = true) => {
     setEditing(false);
     setError(undefined);
     // Return focus to the pencil so keyboard users keep their place.
-    requestAnimationFrame(() => pencilRef.current?.focus({ preventScroll: true }));
+    if (restoreFocus) requestAnimationFrame(() => pencilRef.current?.focus({ preventScroll: true }));
+  };
+
+  // Clicking or tabbing away from the editor cancels the edit. Checked after
+  // the focus change settles so moving between the input, unit picker and
+  // buttons doesn't count; switching windows (document loses focus) doesn't
+  // cancel either, and neither does blurring while a save is in flight.
+  const onBlur = () => {
+    setTimeout(() => {
+      const editor = editorRef.current;
+      if (!editor || savingRef.current || !document.hasFocus()) return;
+      if (editor.contains(document.activeElement)) return;
+      stop(false);
+    });
   };
 
   const save = () => {
@@ -86,10 +101,15 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
       stop();
       return;
     }
+    savingRef.current = true;
     startTransition(async () => {
       const result = await updateField({ vehicleId, field, raw, rowId, index });
-      if (result.error) setError(result.error);
-      else stop();
+      savingRef.current = false;
+      if (result.error) {
+        setError(result.error);
+        // Focus may have been lost while saving; keep the editor usable.
+        if (!editorRef.current?.contains(document.activeElement)) editorRef.current?.querySelector<HTMLElement>("input, select")?.focus();
+      } else stop();
     });
   };
 
@@ -139,7 +159,7 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
   switch (kind.type) {
     case "enum":
       input = (
-        <select {...common} value={draft} onChange={(e) => setDraft(e.target.value)} className={cn(inputClass, "pr-7")}>
+        <select {...common} value={draft} onChange={(e) => setDraft(e.target.value)} className={cn(inputClass, "min-w-0 pr-7")}>
           {kind.options.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
@@ -157,7 +177,7 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
           max="2100-12-31"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          className={cn(inputClass, "w-40")}
+          className={cn(inputClass, "w-40 min-w-0 shrink")}
         />
       );
       break;
@@ -172,13 +192,13 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
           value={draft}
           maxLength={String(kind.max).length + (kind.type === "decimal" ? kind.scale + 1 : 0)}
           onChange={(e) => setDraft(sanitizeNumeric(kind, e.target.value))}
-          className={cn(inputClass, "w-28 tabular-nums")}
+          className={cn(inputClass, "w-28 min-w-0 shrink tabular-nums")}
         />
       );
       break;
     case "measure":
       input = (
-        <span className="inline-flex gap-1">
+        <span className="flex min-w-0 gap-1">
           <input
             {...common}
             type="text"
@@ -187,7 +207,7 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
             maxLength={7}
             value={draft}
             onChange={(e) => setDraft(sanitizeNumeric(kind, e.target.value))}
-            className={cn(inputClass, "w-20 tabular-nums")}
+            className={cn(inputClass, "w-20 min-w-[3.5rem] shrink tabular-nums")}
           />
           <select
             aria-label={`${def.label} unit`}
@@ -218,31 +238,41 @@ export function Editable({ field, value, children, rowId, index, className }: Ed
           maxLength={kind.type === "text" ? kind.max : MAX_LENGTH[kind.type]}
           value={draft}
           onChange={(e) => setDraft(upper ? e.target.value.toUpperCase() : e.target.value)}
-          className={cn(inputClass, "w-full min-w-[10rem]", upper && "font-mono uppercase")}
+          className={cn(inputClass, "min-w-[6rem] flex-1", upper && "font-mono uppercase")}
         />
       );
     }
   }
 
   return (
-    <span className={cn("inline-flex max-w-full flex-col gap-1 text-left", className)}>
-      <span className="inline-flex items-center gap-1">
+    // Fills (and never exceeds) the space it's given, and sits above
+    // neighboring columns so its buttons always stay clickable.
+    <span
+      ref={editorRef}
+      onBlur={onBlur}
+      className={cn("relative z-10 flex w-full min-w-0 max-w-full flex-col gap-1 text-left", className)}
+    >
+      <span className="flex w-full min-w-0 flex-wrap items-center gap-1">
         {input}
+        {/* preventDefault on mousedown keeps focus in the input, so clicking
+            ✓ or ✕ isn't treated as clicking away (Safari doesn't focus buttons). */}
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={save}
           disabled={pending}
           aria-label={`Save ${def.label}`}
-          className="rounded-md p-1.5 text-foreground hover:bg-muted disabled:opacity-50"
+          className="shrink-0 rounded-md p-1.5 text-foreground hover:bg-muted disabled:opacity-50"
         >
           {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
         </button>
         <button
           type="button"
-          onClick={stop}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => stop()}
           disabled={pending}
           aria-label="Cancel"
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+          className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
         >
           <X className="h-3.5 w-3.5" />
         </button>
